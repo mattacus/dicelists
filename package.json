@@ -4,7 +4,7 @@
   "description": "Dicelist password generator in Node.js",
   "main": "dicelist_password_generator.js",
   "scripts": {
-    "generator": "node dicelist_password_generator.js",
+    "generator": "node --no-warnings dicelist_password_generator.js",
     "mock-server": "nodemon mock/mock_server.js"
   },
   "author": "mattacus",

@@ -75,7 +75,7 @@ async function selectWord(words) {
 
   // if there are multiple words mapped to a roll, pick one randomly
   if(result.length > 1) {
-    console.log('words length: ', result.length)
+    // console.log('words length: ', result.length)
 
     let multiWordRes = await axios.post(apiURL,
       {
@@ -91,7 +91,7 @@ async function selectWord(words) {
       }
     )
 
-    console.log('word index: ', multiWordRes.data.result.random.data[0])
+    // console.log('word index: ', multiWordRes.data.result.random.data[0])
 
     REMAINING_API_REQUESTS = multiWordRes.data.result.requestsLeft;
     result = result[multiWordRes.data.result.random.data[0]];
@@ -112,8 +112,13 @@ async function selectWord(words) {
 
 (async function main() {
   try {
+    let pLength = process.argv[2];
+    if (!Number(pLength)) {
+      pLength = 3;
+    }
+    console.log(`Generating random password length ${pLength}...`)
     // Get a wordlist for each word to be used in the password
-    let passwordWordlists = await selectWordlists(3);
+    let passwordWordlists = await selectWordlists(pLength);
     console.log('Wordlists:\n', passwordWordlists);
 
     // For each word list, select a randomly chosen word
@@ -128,7 +133,7 @@ async function selectWord(words) {
 
     // print results
     console.log('\nYour randomly generated password:');
-    console.log(password);
+    console.log('\x1b[36m', password.join(' '), '\x1b[37m');
     console.log('\nRemaining API Requests:');
     console.log(REMAINING_API_REQUESTS);
 
