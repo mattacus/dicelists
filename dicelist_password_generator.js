@@ -9,6 +9,9 @@ const fsPromises = fs.promises;
 
 // Globals
 let REMAINING_API_REQUESTS = null;
+let REROLL_LIMIT = 5;
+let PASSWORD_LENGTH_LIMIT = 7;
+
 
 //
 // ─── UTILITY FUNCTIONS ──────────────────────────────────────────────────────────
@@ -53,9 +56,15 @@ async function selectWordlists(numWords) {
 }
 
 async function selectWord(words) {
+  let result = undefined;
+  let rollCount = 0;
 
-// 'diceroll' random number scheme
-  let wordRes = await axios.post(apiURL,
+  while(!result) {
+    if(rollCount >= REROLL_LIMIT) {
+      throw Error('Max re-rolls exceeded, try rerunning the generator');
+    }
+    // 'diceroll' random number scheme
+    let wordRes = await axios.post(apiURL,
       {
         "jsonrpc": "2.0",
         "method": "generateIntegers",
@@ -67,16 +76,21 @@ async function selectWord(words) {
         },
         "id": 2
       }
-  )
-
-  let diceroll = wordRes.data.result.random.data.join('');
-  console.log('Diceroll: ', diceroll)
-  let result = words[diceroll];
-
+    )
+    REMAINING_API_REQUESTS = wordRes.data.result.requestsLeft;
+    ++rollCount;
+    
+    let diceroll = wordRes.data.result.random.data.join('');
+    console.log('Diceroll: ', diceroll)
+    result = words[diceroll];
+    // roll until a word match is found
+    if(!result) {
+      console.log(`No word(s) found at ${diceroll}, re-rolling...`);
+    }
+  }
+  
   // if there are multiple words mapped to a roll, pick one randomly
   if(result.length > 1) {
-    // console.log('words length: ', result.length)
-
     let multiWordRes = await axios.post(apiURL,
       {
         "jsonrpc": "2.0",
@@ -91,13 +105,10 @@ async function selectWord(words) {
       }
     )
 
-    // console.log('word index: ', multiWordRes.data.result.random.data[0])
-
     REMAINING_API_REQUESTS = multiWordRes.data.result.requestsLeft;
     result = result[multiWordRes.data.result.random.data[0]];
 
   } else {
-    REMAINING_API_REQUESTS = wordRes.data.result.requestsLeft;
     result = result[0];  // flatten single word array
   }
 
@@ -115,6 +126,9 @@ async function selectWord(words) {
     let pLength = process.argv[2];
     if (!Number(pLength)) {
       pLength = 3;
+    } else if (pLength > PASSWORD_LENGTH_LIMIT) {
+      console.log(`Password length limit is set to ${PASSWORD_LENGTH_LIMIT}`)
+      pLength = PASSWORD_LENGTH_LIMIT;
     }
     console.log(`Generating random password length ${pLength}...`)
     // Get a wordlist for each word to be used in the password
@@ -135,7 +149,7 @@ async function selectWord(words) {
     console.log('\nYour randomly generated password:');
     console.log('\x1b[36m', password.join(' '), '\x1b[37m');
     console.log('\nRemaining API Requests:');
-    console.log(REMAINING_API_REQUESTS);
+    console.log('\x1b[33m', `${REMAINING_API_REQUESTS}\n`);
 
   } catch (e) {
     console.error(e)

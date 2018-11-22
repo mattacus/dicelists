@@ -1,4 +1,4 @@
-## dicelists
+# dicelists
 
 XKCD-style password generator
 
