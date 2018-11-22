@@ -123,6 +123,9 @@ async function selectWord(words) {
 
 (async function main() {
   try {
+    if(!apiKey) {
+      throw Error('No API key, please add one to .env in the root directory')
+    }
     let pLength = process.argv[2];
     if (!Number(pLength)) {
       pLength = 3;
