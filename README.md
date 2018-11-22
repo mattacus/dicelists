@@ -1,6 +1,6 @@
 # dicelists
 
-XKCD-style password generator
+A dicelist based (XKCD-style) password generator in Node.js
 
 Wordlists are copied here for convenience, from the Openwall Project (https://www.openwall.com/wordlists/).
 
