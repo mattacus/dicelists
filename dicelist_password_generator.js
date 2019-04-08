@@ -1,7 +1,8 @@
 require('dotenv').config();
 const apiKey = process.env.RANDOMORG_API_KEY;
-const apiURL = 'https://api.random.org/json-rpc/1/invoke';
+const apiURL = 'https://api.random.org/json-rpc/2/invoke';
 // const apiURL = 'http://localhost:3000/invoke' // mock url
+const headers = { 'Content-Type': 'application/json' };
 
 const axios = require('axios');
 const fs = require('fs');
@@ -37,17 +38,21 @@ async function selectWordlists(numWords) {
   let fileNames = await fsPromises.readdir('wordlists/');
 
   // roll to select a random wordlist from list of files
-  let wordlistRes = await axios.post(apiURL, {
-    jsonrpc: '2.0',
-    method: 'generateIntegers',
-    params: {
-      apiKey: apiKey,
-      n: numWords,
-      min: 0,
-      max: fileNames.length - 1
+  let wordlistRes = await axios.post(
+    apiURL,
+    {
+      jsonrpc: '2.0',
+      method: 'generateIntegers',
+      params: {
+        apiKey: apiKey,
+        n: numWords,
+        min: 0,
+        max: fileNames.length - 1
+      },
+      id: 1
     },
-    id: 1
-  });
+    { headers }
+  );
 
   let wordlistRoll = wordlistRes.data.result.random.data;
   return wordlistRoll.map((index) => fileNames[index]);
@@ -62,17 +67,21 @@ async function selectWord(words) {
       throw Error('Max re-rolls exceeded, try rerunning the generator');
     }
     // 'diceroll' random number scheme
-    let wordRes = await axios.post(apiURL, {
-      jsonrpc: '2.0',
-      method: 'generateIntegers',
-      params: {
-        apiKey: apiKey,
-        n: 5,
-        min: 1,
-        max: 6
+    let wordRes = await axios.post(
+      apiURL,
+      {
+        jsonrpc: '2.0',
+        method: 'generateIntegers',
+        params: {
+          apiKey: apiKey,
+          n: 5,
+          min: 1,
+          max: 6
+        },
+        id: 2
       },
-      id: 2
-    });
+      { headers }
+    );
     REMAINING_API_REQUESTS = wordRes.data.result.requestsLeft;
     ++rollCount;
 
@@ -87,17 +96,21 @@ async function selectWord(words) {
 
   // if there are multiple words mapped to a roll, pick one randomly
   if (result.length > 1) {
-    let multiWordRes = await axios.post(apiURL, {
-      jsonrpc: '2.0',
-      method: 'generateIntegers',
-      params: {
-        apiKey: apiKey,
-        n: 1,
-        min: 0,
-        max: result.length - 1
+    let multiWordRes = await axios.post(
+      apiURL,
+      {
+        jsonrpc: '2.0',
+        method: 'generateIntegers',
+        params: {
+          apiKey: apiKey,
+          n: 1,
+          min: 0,
+          max: result.length - 1
+        },
+        id: 3
       },
-      id: 3
-    });
+      { headers }
+    );
 
     REMAINING_API_REQUESTS = multiWordRes.data.result.requestsLeft;
     result = result[multiWordRes.data.result.random.data[0]];
